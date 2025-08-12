@@ -1,0 +1,7 @@
+
+
+/* Ensure canvas stays behind content */
+canvas {
+  position: fixed !important;
+  z-index: 0 !important;
+}
