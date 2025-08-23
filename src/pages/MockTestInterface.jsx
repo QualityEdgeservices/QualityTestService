@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, Check, X, Flag, ChevronLeft, ChevronRight, Bookmark, RotateCw, AlertCircle } from 'lucide-react';
+import { Clock, Check, X, Flag, ChevronLeft, ChevronRight, Bookmark, RotateCw, AlertCircle, Maximize, Minimize } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const MockTestInterface = () => {
@@ -84,6 +84,7 @@ const MockTestInterface = () => {
   const [timeLeft, setTimeLeft] = useState(test.duration);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   // Timer effect
   useEffect(() => {
@@ -104,6 +105,93 @@ const MockTestInterface = () => {
       setQuestions(updatedQuestions);
     }
   }, [currentQuestionIndex, questions]);
+
+  // Enter full screen when test starts
+  useEffect(() => {
+    if (!showInstructions && !isFullScreen) {
+      enterFullScreen();
+    }
+  }, [showInstructions, isFullScreen]);
+
+  // Keyboard restriction effect
+  useEffect(() => {
+    if (!showInstructions) {
+      // Disable all keyboard shortcuts
+      const disableKeys = (e) => {
+        // Allow only Ctrl+Enter for submission (optional)
+        if (e.ctrlKey && e.key === 'Enter') {
+          handleSubmitTest();
+          return;
+        }
+        
+        // Prevent all other keyboard actions
+        e.preventDefault();
+        return false;
+      };
+
+      // Disable right-click context menu
+      const disableRightClick = (e) => {
+        e.preventDefault();
+        return false;
+      };
+
+      // Add event listeners
+      document.addEventListener('keydown', disableKeys);
+      document.addEventListener('keyup', disableKeys);
+      document.addEventListener('keypress', disableKeys);
+      document.addEventListener('contextmenu', disableRightClick);
+
+      // Disable browser back button
+      const disableBackButton = () => {
+        window.history.pushState(null, null, window.location.href);
+      };
+      
+      window.history.pushState(null, null, window.location.href);
+      window.addEventListener('popstate', disableBackButton);
+
+      // Cleanup function
+      return () => {
+        document.removeEventListener('keydown', disableKeys);
+        document.removeEventListener('keyup', disableKeys);
+        document.removeEventListener('keypress', disableKeys);
+        document.removeEventListener('contextmenu', disableRightClick);
+        window.removeEventListener('popstate', disableBackButton);
+      };
+    }
+  }, [showInstructions]);
+
+  // Enter full screen function
+  const enterFullScreen = () => {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().then(() => setIsFullScreen(true));
+    } else if (elem.mozRequestFullScreen) { /* Firefox */
+      elem.mozRequestFullScreen();
+      setIsFullScreen(true);
+    } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+      elem.webkitRequestFullscreen();
+      setIsFullScreen(true);
+    } else if (elem.msRequestFullscreen) { /* IE/Edge */
+      elem.msRequestFullscreen();
+      setIsFullScreen(true);
+    }
+  };
+
+  // Exit full screen function
+  const exitFullScreen = () => {
+    if (document.exitFullscreen) {
+      document.exitFullscreen().then(() => setIsFullScreen(false));
+    } else if (document.mozCancelFullScreen) { /* Firefox */
+      document.mozCancelFullScreen();
+      setIsFullScreen(false);
+    } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+      document.webkitExitFullscreen();
+      setIsFullScreen(false);
+    } else if (document.msExitFullscreen) { /* IE/Edge */
+      document.msExitFullscreen();
+      setIsFullScreen(false);
+    }
+  };
 
   // Format time display
   const formatTime = (seconds) => {
@@ -143,10 +231,14 @@ const MockTestInterface = () => {
 
   const handleSubmitTest = () => {
     setIsSubmitted(true);
-    // In a real app, you would send the results to a server here
   };
 
   const handleConfirmSubmit = () => {
+    // Exit full screen before navigating
+    if (isFullScreen) {
+      exitFullScreen();
+    }
+    
     // Calculate score and navigate to results page
     const score = questions.filter(
       (q, i) => q.answered === q.correctAnswer
@@ -207,6 +299,13 @@ const MockTestInterface = () => {
                 <div className="bg-primary-600 w-2 h-2 rounded-full"></div>
               </div>
               <span className="text-gray-700">You can <strong>mark questions for review</strong> using the flag icon.</span>
+            </div>
+            
+            <div className="flex items-start">
+              <div className="bg-primary-100 p-1 rounded-full mr-3 mt-0.5">
+                <div className="bg-primary-600 w-2 h-2 rounded-full"></div>
+              </div>
+              <span className="text-gray-700 font-semibold text-red-600">The test will open in full-screen mode and keyboard navigation will be disabled.</span>
             </div>
           </div>
           
@@ -276,9 +375,9 @@ const MockTestInterface = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 fixed inset-0 overflow-auto">
       {/* Test Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <h1 className="text-xl font-semibold text-gray-800">{test.title}</h1>
           <div className="flex items-center space-x-4">
@@ -286,6 +385,12 @@ const MockTestInterface = () => {
               <Clock className="h-5 w-5 mr-2" />
               <span className="font-medium">{formatTime(timeLeft)}</span>
             </div>
+            <button 
+              onClick={() => exitFullScreen()}
+              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600"
+            >
+              <Minimize className="h-5 w-5" />
+            </button>
             <button 
               onClick={handleSubmitTest}
               className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -362,7 +467,7 @@ const MockTestInterface = () => {
           </div>
 
           {/* Questions Overview Panel */}
-          <div className="lg:w-1/4 bg-white rounded-xl shadow-sm p-6 h-fit sticky top-6">
+          <div className="lg:w-1/4 bg-white rounded-xl shadow-sm p-6 h-fit sticky top-20">
             <h3 className="font-medium text-gray-800 mb-4">Questions</h3>
             <div className="grid grid-cols-5 gap-3">
               {questions.map((q, index) => (
