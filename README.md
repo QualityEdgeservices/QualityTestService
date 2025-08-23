@@ -1,12 +1,79 @@
-# React + Vite
+# QualityTestService Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern frontend for the QualityTestService platform, built with React, Vite, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- User authentication (Login, Register, Forgot Password)
+- Dashboard for users
+- Exam test series and mock test interface
+- Test results and statistics
+- Responsive design with Tailwind CSS
+- Modular React components
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+src/
+  assets/           # Images and icons
+  components/       # Reusable UI components
+  pages/            # Main application pages
+  App.jsx           # Root component
+  main.jsx          # Entry point
+  styles.css        # Global styles
+public/             # Static files
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v16+ recommended)
+- npm or yarn
+
+### Installation
+
+```bash
+npm install
+```
+
+### Running the Development Server
+
+```bash
+npm run dev
+```
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
+
+## Technologies Used
+
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [ESLint](https://eslint.org/)
+- [PostCSS](https://postcss.org/)
+
+## Folder Details
+
+- `components/`: Navbar, Footer, Hero, TestCards, Testimonials, etc.
+- `pages/`: HomePage, AuthPages, ExamTestSeriesPage, UserDashboard, etc.
+
+## Contributing
+
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+## License
+
+[MIT](LICENSE)
+
+---

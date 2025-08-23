@@ -16,7 +16,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post("/api/auth/forgot-password", { email });
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/forgot-password`, { email });
       toast.success("Password reset OTP sent to your email!");
       setStep(2);
     } catch (error) {
@@ -30,7 +30,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post("/api/auth/verify-reset-otp", { email, otp });
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/verify-reset-otp`, { email, otp });
       toast.success("OTP verified successfully!");
       setStep(3);
     } catch (error) {
