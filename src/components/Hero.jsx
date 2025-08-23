@@ -1,448 +1,301 @@
-import React, { useEffect, useRef } from 'react';
-import { Rocket, BrainCircuit, BarChart2, Zap, ArrowRight, Award, Clock, BookOpen } from 'lucide-react';
-import { motion, useAnimation, useInView, AnimatePresence } from 'framer-motion';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sphere } from '@react-three/drei';
-import * as THREE from 'three';
+import React from 'react';
+import { Target, Users, TrendingUp, Clock, ChevronRight, Star, BookOpen, Award, Brain, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Hero = () => {
-  const controls = useAnimation();
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-  const [activeFeature, setActiveFeature] = React.useState(null);
-  const examCarouselRef = useRef(null);
-
-  useEffect(() => {
-    if (isInView) {
-      controls.start("visible");
+  // Stats data
+  const stats = [
+    {
+      icon: <Target className="h-6 w-6 text-indigo-400" />,
+      value: "98%",
+      label: "Success Rate",
+      description: "Of students achieve their target scores"
+    },
+    {
+      icon: <Users className="h-6 w-6 text-indigo-400" />,
+      value: "250K+",
+      label: "Active Users",
+      description: "Join our growing community of learners"
+    },
+    {
+      icon: <TrendingUp className="h-6 w-6 text-indigo-400" />,
+      value: "2.5x",
+      label: "Faster Progress",
+      description: "Compared to traditional study methods"
+    },
+    {
+      icon: <Clock className="h-6 w-6 text-indigo-400" />,
+      value: "24/7",
+      label: "Availability",
+      description: "Study anytime, anywhere"
     }
-  }, [isInView, controls]);
+  ];
 
-  useEffect(() => {
-    const carousel = examCarouselRef.current;
-    if (!carousel) return;
-
-    const scrollWidth = carousel.scrollWidth;
-    const clientWidth = carousel.clientWidth;
-    let direction = 1;
-    let position = 0;
-
-    const animate = () => {
-      position += direction * 0.5;
-      
-      if (position >= scrollWidth - clientWidth) {
-        direction = -1;
-      } else if (position <= 0) {
-        direction = 1;
-      }
-      
-      carousel.scrollLeft = position;
-      requestAnimationFrame(animate);
-    };
-
-    const animationId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationId);
-  }, []);
-
+  // Features data
   const features = [
-    {
-      id: 1,
-      icon: <BrainCircuit className="text-indigo-500" size={28} />,
-      title: "AI-Powered Insights",
-      description: "Get real-time analysis of your strengths and weaknesses",
-      color: "from-indigo-600/20 to-indigo-600/10",
-      bgColor: "bg-indigo-600/30",
-      extendedDesc: "Our advanced AI analyzes every answer to provide personalized recommendations for improvement, tracking 37 different performance metrics."
-    },
-    {
-      id: 2,
-      icon: <BarChart2 className="text-teal-500" size={28} />,
-      title: "Smart Progress Tracking",
-      description: "Visualize your improvement with detailed analytics",
-      color: "from-teal-600/20 to-teal-600/10",
-      bgColor: "bg-teal-600/30",
-      extendedDesc: "Interactive dashboards show your progress across all subjects, with predictive scoring based on historical performance data."
-    },
-    {
-      id: 3,
-      icon: <Zap className="text-amber-500" size={28} />,
-      title: "Adaptive Learning",
-      description: "Tests that automatically adjust to your skill level",
-      color: "from-amber-600/20 to-amber-600/10",
-      bgColor: "bg-amber-600/30",
-      extendedDesc: "The system dynamically adjusts question difficulty based on your responses, focusing on areas that need the most attention."
-    },
-    {
-      id: 4,
-      icon: <Award className="text-purple-500" size={28} />,
-      title: "Expert Curated",
-      description: "Content designed by top educators and exam toppers",
-      color: "from-purple-600/20 to-purple-600/10",
-      bgColor: "bg-purple-600/30",
-      extendedDesc: "Our question bank is developed by IIT/NIT alumni and exam toppers, with detailed explanations for every concept."
-    },
-    {
-      id: 5,
-      icon: <Clock className="text-cyan-500" size={28} />,
-      title: "Time Management",
-      description: "Practice with realistic exam timers and pacing",
-      color: "from-cyan-600/20 to-cyan-600/10",
-      bgColor: "bg-cyan-600/30",
-      extendedDesc: "Simulate real exam conditions with our intelligent timing system that helps you optimize your question-solving strategy."
-    },
-    {
-      id: 6,
-      icon: <BookOpen className="text-emerald-500" size={28} />,
-      title: "Comprehensive Resources",
-      description: "Access to 10,000+ questions and solutions",
-      color: "from-emerald-600/20 to-emerald-600/10",
-      bgColor: "bg-emerald-600/30",
-      extendedDesc: "Massive repository covering all exam patterns with regularly updated content aligned with the latest syllabi."
-    }
+    { icon: <Brain className="h-5 w-5" />, text: "AI-Powered Learning" },
+    { icon: <BookOpen className="h-5 w-5" />, text: "10,000+ Questions" },
+    { icon: <Award className="h-5 w-5" />, text: "Expert Curated" },
+    { icon: <Zap className="h-5 w-5" />, text: "Adaptive Testing" }
   ];
-
-  const examTypes = [
-    "SSC", "GATE", "JEE", "NEET", "UPSC", "CAT", "Banking", "GRE",
-    "GMAT", "CLAT", "NDA", "CDS", "AFCAT", "Railways", "State PSCs"
-  ];
-
-  // Floating 3D sphere component
-  const FloatingSphere = () => {
-    const meshRef = useRef();
-    
-    useFrame((state) => {
-      if (meshRef.current) {
-        meshRef.current.rotation.x += 0.005;
-        meshRef.current.rotation.y += 0.01;
-        const time = state.clock.getElapsedTime();
-        meshRef.current.position.y = Math.sin(time * 0.5) * 0.2;
-      }
-    });
-
-    return (
-      <Sphere ref={meshRef} args={[1.5, 64, 64]}>
-        <meshStandardMaterial
-          color="#4f46e5"
-          emissive="#6366f1"
-          emissiveIntensity={0.5}
-          roughness={0.2}
-          metalness={0.7}
-          transparent
-          opacity={0.8}
-        />
-      </Sphere>
-    );
-  };
 
   return (
-   <section 
-  ref={ref}
-  className="relative min-h-screen overflow-hidden bg-gradient-to-br from-gray-700 via-gray-600 to-gray-700"
->
-      {/* Interactive particle background */}
+    <section className="mb-10 relative min-h-screen overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Enhanced background with gradient mesh */}
       <div className="absolute inset-0 overflow-hidden z-0">
-        <Canvas
-          style={{ position: "absolute", zIndex: -1 }}
-          camera={{ position: [0, 0, 5], fov: 45 }}
-        >
-          <ambientLight intensity={0.7} />
-          <pointLight position={[10, 10, 10]} intensity={1.2} />
-          <FloatingSphere />
-          <OrbitControls enableZoom={false} enablePan={false} />
-        </Canvas>
-        
-        {[...Array(120)].map((_, i) => (
+        {/* Gradient mesh background */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-indigo-900/40 rounded-full blur-6xl"></div>
+          <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-teal-900/30 rounded-full blur-6xl"></div>
+          <div className="absolute top-1/4 left-1/4 w-1/4 h-1/4 bg-purple-900/20 rounded-full blur-5xl"></div>
+        </div>
+
+        {/* Animated grid pattern */}
+        <div className="absolute inset-0 opacity-10 bg-grid-white/10"></div>
+
+        {/* Subtle particles */}
+        {[...Array(30)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full bg-white/20"
+            className="absolute rounded-full bg-white/10"
             style={{
-              width: `${Math.random() * 8 + 2}px`,
-              height: `${Math.random() * 8 + 2}px`,
+              width: `${Math.random() * 6 + 2}px`,
+              height: `${Math.random() * 6 + 2}px`,
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              x: [0, Math.random() * 100 - 50],
-              y: [0, Math.random() * 100 - 50],
-              opacity: [0.2, 0.9, 0.2],
+              x: [0, Math.random() * 30 - 15],
+              y: [0, Math.random() * 30 - 15],
+              opacity: [0.1, 0.3, 0.1],
             }}
             transition={{
-              duration: Math.random() * 30 + 15,
+              duration: Math.random() * 15 + 10,
               repeat: Infinity,
               repeatType: 'reverse',
-              ease: 'linear',
+              ease: 'easeInOut',
             }}
           />
         ))}
       </div>
 
-      <div className="relative z-20 container mx-auto px-4 h-full flex items-center pt-20 pb-28">
-
-        <div className="grid lg:grid-cols-2 gap-12 items-center border-red-500">
+      <div className="relative z-20 container mx-auto px-4 min-h-screen flex flex-col justify-center">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left Content */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
-            animate={controls}
+            whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
+            viewport={{ once: true, margin: "-100px" }}
             className="text-center lg:text-left"
           >
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-              className="inline-flex items-center px-4 py-2 rounded-full bg-gray-700 border border-gray-600 mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              viewport={{ once: true }}
+              className="mt-10 inline-flex items-center px-4 py-2 rounded-full bg-indigo-900/30 border border-indigo-700/50 mb-8 shadow-lg"
             >
-              <Rocket className="h-5 w-5 text-amber-400 mr-2" />
-              <span className="text-sm font-medium text-gray-100">
-                The Future of Exam Preparation
+              <div className="h-2 w-2 bg-indigo-400 rounded-full mr-2 animate-pulse"></div>
+              <span className="text-sm font-medium text-indigo-200">
+                AI-Powered Learning Platform
               </span>
+              <motion.div 
+                className="ml-2 h-2 w-2 bg-indigo-400 rounded-full"
+                animate={{ scale: [1, 1.5, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
             </motion.div>
 
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              viewport={{ once: true }}
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
             >
+              Master Competitive Exams with{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-teal-400">
-                Revolutionizing
-              </span>{" "}
-              Competitive Exam Prep
+                Intelligent Preparation
+              </span>
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              whileInView={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.8 }}
-              className="text-xl text-gray-100 mb-8 max-w-2xl mx-auto lg:mx-0"
+              viewport={{ once: true }}
+              className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
             >
-              Our AI-powered platform adapts to your learning style, providing personalized mock tests and detailed analytics to help you outperform 90% of candidates.
+              Our adaptive learning platform uses advanced algorithms to create personalized study paths that maximize your efficiency and results.
             </motion.p>
 
-            {/* Exam badges carousel */}
+            {/* Feature badges */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              whileInView={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.8 }}
-              className="mb-10 overflow-hidden"
+              viewport={{ once: true }}
+              className="flex flex-wrap gap-3 mb-10 justify-center lg:justify-start"
             >
-              <div 
-                ref={examCarouselRef}
-                className="flex gap-3 py-2 overflow-x-auto scrollbar-hide"
-              >
-                {examTypes.map((exam, index) => (
-                  <motion.span
-                    key={index}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.6 + index * 0.05, type: 'spring' }}
-                    className="flex-shrink-0 px-4 py-2 bg-gray-700/70 border border-gray-600 rounded-full text-sm font-medium text-gray-100 hover:bg-gray-600 transition-colors"
-                    whileHover={{ 
-                      scale: 1.1,
-                      backgroundColor: 'rgba(99, 102, 241, 0.5)'
-                    }}
-                  >
-                    {exam}
-                  </motion.span>
-                ))}
-              </div>
+              {features.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
+                  viewport={{ once: true }}
+                  whileHover={{ 
+                    y: -3,
+                    backgroundColor: 'rgba(99, 102, 241, 0.2)'
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-full text-gray-200 text-sm"
+                >
+                  <span className="text-indigo-400">{feature.icon}</span>
+                  {feature.text}
+                </motion.div>
+              ))}
             </motion.div>
 
+            {/* Buttons */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.8 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.8 }}
+              viewport={{ once: true }}
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12"
             >
               <motion.button
                 whileHover={{ 
                   scale: 1.05,
-                  boxShadow: '0 0 25px rgba(99, 102, 241, 0.7)'
+                  boxShadow: '0 10px 30px rgba(99, 102, 241, 0.4)'
                 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative overflow-hidden group px-8 py-4 bg-gradient-to-r from-indigo-500 to-teal-500 rounded-lg font-medium text-white shadow-lg hover:shadow-xl transition-all"
+                whileTap={{ scale: 0.98 }}
+                className="relative overflow-hidden group px-8 py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-xl font-medium text-white shadow-2xl hover:shadow-3xl transition-all duration-300"
               >
-                <span className="relative z-10 flex items-center">
-                  Start 7-Day Free Trial
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                <span className="relative z-10 flex items-center justify-center">
+                  Get Started Free
+                  <ChevronRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </span>
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                  initial={{ x: '-100%' }}
-                  animate={{ x: '100%' }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: 'linear'
-                  }}
-                />
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-700 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.button>
 
               <motion.button
                 whileHover={{ 
                   scale: 1.05,
-                  boxShadow: '0 0 20px rgba(165, 180, 252, 0.4)'
+                  boxShadow: '0 10px 25px rgba(165, 180, 252, 0.3)'
                 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 border-2 border-gray-500 hover:border-indigo-400 rounded-lg font-medium text-white hover:text-indigo-300 transition-all hover:shadow-lg"
+                whileTap={{ scale: 0.98 }}
+                className="px-8 py-4 border-2 border-gray-600 hover:border-indigo-400 rounded-xl font-medium text-white hover:text-indigo-300 transition-all duration-300 hover:shadow-lg bg-gray-800/40 backdrop-blur-sm"
               >
-                Explore All Features
+                View Demo
               </motion.button>
             </motion.div>
 
-            {/* Trust indicators */}
-            <motion.div 
-              className="mt-12 flex flex-col sm:flex-row items-center gap-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8, duration: 0.8 }}
-            >
-              <div className="flex items-center">
-                <div className="flex -space-x-3">
-                  {[...Array(5)].map((_, i) => (
-                    <motion.img
-                      key={i}
-                      src={`https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 50)}.jpg`}
-                      alt="User"
-                      className="w-10 h-10 rounded-full border-2 border-gray-700"
-                      initial={{ x: -10 * i, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.9 + i * 0.1 }}
-                      whileHover={{ zIndex: 10, scale: 1.2 }}
-                    />
-                  ))}
-                </div>
-                <div className="ml-4 text-left">
-                  <p className="text-sm font-medium text-gray-100">Trusted by 250,000+ students</p>
-                  <div className="flex items-center mt-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
-                    ))}
-                    <span className="text-xs text-gray-200 ml-2">4.9/5 (3,458 reviews)</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+           
           </motion.div>
 
-          {/* Right Content - Interactive Feature Grid */}
+          {/* Right Content - Stats */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
-            animate={controls}
+            whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5 relative z-100"
+            viewport={{ once: true, margin: "-100px" }}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-20"
           >
-            {features.map((feature, index) => (
+            {stats.map((stat, index) => (
               <motion.div
-                key={feature.id}
-                custom={index}
+                key={index}
                 initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + index * 0.1, duration: 0.6 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.1, duration: 0.6 }}
+                viewport={{ once: true }}
                 whileHover={{ 
                   y: -8, 
-                  scale: 1.02,
-                  boxShadow: '0 15px 30px -5px rgba(0, 0, 0, 0.3)'
+                  scale: 1.03,
+                  boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.3)'
                 }}
-                onClick={() => setActiveFeature(feature)}
-                className={`bg-gradient-to-br ${feature.color} backdrop-blur-sm border border-gray-600 rounded-xl p-6 hover:shadow-xl transition-all cursor-pointer`}
-                layout
+                className="bg-gradient-to-br from-gray-800/70 to-gray-800/50 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 group"
               >
-                <div className="flex items-start space-x-4">
-                  <div className={`p-3 rounded-lg ${feature.bgColor} border border-gray-600 shadow-sm`}>
-                    {feature.icon}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      {feature.title}
-                    </h3>
-                    <p className="text-gray-100 text-sm">
-                      {feature.description}
-                    </p>
-                  </div>
+                <div className="flex flex-col">
+                  <motion.div 
+                    className="mb-4 p-3 rounded-xl bg-indigo-500/20 border border-indigo-500/30 w-fit group-hover:bg-indigo-500/30 transition-colors"
+                    whileHover={{ rotate: 5 }}
+                  >
+                    {stat.icon}
+                  </motion.div>
+                  <h3 className="text-3xl font-bold text-white mb-1">{stat.value}</h3>
+                  <p className="text-lg font-semibold text-indigo-300 mb-2">{stat.label}</p>
+                  <p className="text-gray-300 text-sm">{stat.description}</p>
                 </div>
+                
+                {/* Subtle glow effect on hover */}
+                <div className="absolute inset-0 rounded-2xl bg-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
               </motion.div>
             ))}
-
-            {/* Feature detail overlay */}
-            <AnimatePresence>
-              {activeFeature && (
-                <motion.div 
-                  className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onClick={() => setActiveFeature(null)}
-                >
-                  <motion.div 
-                    className={`max-w-md w-full rounded-2xl p-8 ${activeFeature.bgColor} border border-gray-500 backdrop-blur-lg`}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    onClick={(e) => e.stopPropagation()}
-                    layoutId={`feature-${activeFeature.id}`}
-                  >
-                    <div className="flex items-center space-x-4 mb-6">
-                      <div className={`p-3 rounded-lg ${activeFeature.bgColor} border border-gray-500`}>
-                        {activeFeature.icon}
-                      </div>
-                      <h3 className="text-2xl font-bold text-white">
-                        {activeFeature.title}
-                      </h3>
-                    </div>
-                    <p className="text-gray-100 mb-6">
-                      {activeFeature.extendedDesc}
-                    </p>
-                    <div className="flex justify-end">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="px-6 py-2 bg-white/20 border border-gray-300 rounded-lg text-white"
-                        onClick={() => setActiveFeature(null)}
-                      >
-                        Close
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
         </div>
+
+        {/* Exam badges */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.1, duration: 0.8 }}
+          viewport={{ once: true }}
+          className="lg:mt-12"
+        >
+          <p className="text-center text-gray-400 mb-6 text-lg">Supporting preparation for</p>
+          <div className="flex flex-wrap justify-center gap-3 mb-10">
+            {['JEE', 'NEET', 'UPSC', 'GATE', 'CAT', 'SSC', 'Banking', 'GRE', 'GMAT', 'CLAT'].map((exam, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.2 + index * 0.1, type: "spring", stiffness: 100 }}
+                viewport={{ once: true }}
+                whileHover={{ 
+                  scale: 1.1,
+                  backgroundColor: 'rgba(99, 102, 241, 0.3)',
+                  color: '#fff'
+                }}
+                className="px-5 py-2.5 bg-gray-800/60 border border-gray-700 rounded-full text-sm font-medium text-gray-300 transition-colors duration-300 shadow-sm hover:shadow-md"
+              >
+                {exam}
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
 
       {/* Animated scroll indicator */}
+     <motion.div
+  initial={{ opacity: 0 }}
+  whileInView={{ opacity: 1 }}
+  transition={{ delay: 1.4 }}
+  viewport={{ once: true }}
+  className="absolute bottom-12 left-0 right-0 flex justify-center z-30"
+>
+  {/* <motion.div
+    animate={{ y: [0, 12, 0] }}
+    transition={{ duration: 2, repeat: Infinity }}
+    className="flex flex-col items-center text-gray-400 cursor-pointer group"
+    whileHover={{ scale: 1.1 }}
+  >
+    <span className="text-sm mb-2 group-hover:text-indigo-300 transition-colors">
+      Discover Features
+    </span>
+    <div className="w-10 h-16 border-2 border-gray-600 rounded-full flex justify-center p-1 group-hover:border-indigo-500 transition-colors">
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-        className="absolute bottom-8 left-0 right-0 flex justify-center"
-      >
-        <motion.div
-          animate={{ y: [0, 15, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="flex flex-col items-center text-gray-300 cursor-pointer group"
-          whileHover={{ scale: 1.1 }}
-        >
-          <span className="text-sm mb-2 group-hover:text-indigo-300 transition-colors">Scroll to Explore</span>
-          <div className="w-10 h-16 border-2 border-gray-400 rounded-full flex justify-center p-1 group-hover:border-indigo-400 transition-colors">
-            <motion.div
-              animate={{ y: [0, 20, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-3 h-3 bg-gray-300 rounded-full group-hover:bg-indigo-400 transition-colors"
-            />
-          </div>
-        </motion.div>
-      </motion.div>
+        animate={{ y: [0, 16, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="w-3 h-3 bg-gray-500 rounded-full group-hover:bg-indigo-500 transition-colors"
+      />
+    </div>
+  </motion.div> */}
+</motion.div>
+
     </section>
   );
 };
-
-// Star icon component
-const Star = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24">
-    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-  </svg>
-);
 
 export default Hero;

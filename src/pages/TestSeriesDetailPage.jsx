@@ -2,10 +2,12 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { BookText, Clock, Hash, Layers, ArrowRight, FileText, Award, Shield, Banknote, ChevronLeft, ChevronRight, BookOpen, List, Grid, Trophy, BarChart2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const TestSeriesDetailPage = () => {
   const { examId } = useParams();
-  
+  const navigate = useNavigate();
+
   // Sample data for all exams
   const examDetails = {
     1: {
@@ -328,7 +330,14 @@ const TestSeriesDetailPage = () => {
                         </span>
                       </div>
                     </div>
-                    <button className={`px-4 py-2 rounded-lg text-sm font-medium ${index % 3 === 0 ? 'bg-primary-600 text-white hover:bg-primary-700' : 'bg-white border border-primary-600 text-primary-600 hover:bg-primary-50'}`}>
+                    <button className={`px-4 py-2 rounded-lg text-sm font-medium ${index % 3 === 0 ? 'bg-primary-600 text-white hover:bg-primary-700' : 'bg-white border border-primary-600 text-primary-600 hover:bg-primary-50'}`}
+                onClick={() => {
+                  if (index % 3 === 0) {
+                    navigate(`/mock-test/${examId}/${test.id}`);
+                  } else {
+                    navigate(`/test-details/${examId}/${test.id}`);
+                  }
+                }}>
                       {index % 3 === 0 ? 'Start Test' : 'View Details'}
                     </button>
                   </div>
