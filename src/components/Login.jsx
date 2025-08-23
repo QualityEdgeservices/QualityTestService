@@ -1,30 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Loader2 } from "lucide-react";
-import { GoogleLogin } from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
+import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-
-// ✅ Error Boundary to catch GoogleLogin crash
-class GoogleLoginErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <p className="text-center text-red-500">Google Login failed to load.</p>;
-    }
-
-    return this.props.children;
-  }
-}
+import { FaGoogle } from "react-icons/fa";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -47,31 +27,33 @@ const Login = () => {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      if (!credentialResponse?.credential) {
-        toast.error("Google login failed: No token received.");
-        return;
+  // Google Login with custom button
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        // fetch profile using Google API
+        const res = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
+        );
+
+        const { email, name, sub: googleId } = res.data;
+
+        const response = await axios.post("/api/auth/google", {
+          email,
+          name,
+          googleId,
+        });
+
+        localStorage.setItem("token", response.data.token);
+        toast.success("Google login successful!");
+        navigate("/");
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Google login failed");
       }
-
-      const decoded = jwtDecode(credentialResponse.credential);
-      const response = await axios.post("/api/auth/google", {
-        email: decoded.email,
-        name: decoded.name,
-        googleId: decoded.sub,
-      });
-
-      localStorage.setItem("token", response.data.token);
-      toast.success("Google login successful!");
-      navigate("/");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Google login failed");
-    }
-  };
-
-  const handleGoogleFailure = () => {
-    toast.error("Google login failed. Please try again.");
-  };
+    },
+    onError: () => toast.error("Google login failed. Please try again."),
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -83,6 +65,7 @@ const Login = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {/* Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -100,7 +83,7 @@ const Login = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>
@@ -121,7 +104,7 @@ const Login = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>
@@ -132,7 +115,7 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                   Remember me
@@ -140,7 +123,7 @@ const Login = () => {
               </div>
 
               <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-primary-600 hover:text-primary-500">
+                <Link to="/forgot-password" className="font-medium text-teal-600 hover:text-teal-500">
                   Forgot your password?
                 </Link>
               </div>
@@ -150,13 +133,14 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
                 {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "Sign in"}
               </button>
             </div>
           </form>
 
+          {/* Divider */}
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -167,21 +151,23 @@ const Login = () => {
               </div>
             </div>
 
+            {/* Custom Google button */}
             <div className="mt-6 flex justify-center">
-              <GoogleLoginErrorBoundary>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleFailure}
-                  useOneTap
-                />
-              </GoogleLoginErrorBoundary>
+              <button
+                onClick={() => loginWithGoogle()}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition"
+              >
+              <FaGoogle />
+                <span>Sign in with Google</span>
+
+              </button>
             </div>
           </div>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
-              <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
+              Don&apos;t have an account?{" "}
+              <Link to="/register" className="font-medium text-teal-600 hover:text-teal-500">
                 Sign up
               </Link>
             </p>
