@@ -12,21 +12,44 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await axios.post("/api/auth/login", { email, password });
-      localStorage.setItem("token", response.data.token);
-      toast.success("Login successful!");
-      navigate("/");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, { email, password });
+  //     localStorage.setItem("token", response.data.token);
+  //     toast.success("Login successful!");
+  //     navigate("/");
+  //   } catch (error) {
+  //     toast.error(error.response?.data?.message || "Login failed");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, { email, password });
+    localStorage.setItem("token", response.data.token);
+    
+    // Dispatch event to notify Navbar about login
+    window.dispatchEvent(new CustomEvent('userLoggedIn', {
+      detail: {
+        user: response.data.user,
+        token: response.data.token
+      }
+    }));
+    
+    toast.success("Login successful!");
+    navigate("/dashboard");
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
   // Google Login with custom button
   const loginWithGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -39,7 +62,7 @@ const Login = () => {
 
         const { email, name, sub: googleId } = res.data;
 
-        const response = await axios.post("/api/auth/google", {
+        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/google`, {
           email,
           name,
           googleId,

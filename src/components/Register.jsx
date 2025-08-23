@@ -18,7 +18,7 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post("/api/auth/register", { name, email, mobile, password });
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/register`, { name, email, mobile, password });
       toast.success("Registration successful! Please verify your email.");
       setStep(2);
     } catch (error) {
@@ -28,24 +28,47 @@ const Register = () => {
     }
   };
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await axios.post("/api/auth/verify-email", { email, otp });
-      localStorage.setItem("token", response.data.token);
-      toast.success("Email verified successfully!");
-      navigate("/");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Verification failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleVerify = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/verify-email`, { email, otp });
+  //     localStorage.setItem("token", response.data.token);
+  //     toast.success("Email verified successfully!");
+  //     navigate("/login");
+  //   } catch (error) {
+  //     toast.error(error.response?.data?.message || "Verification failed");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
+  const handleVerify = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/verify-email`, { email, otp });
+    localStorage.setItem("token", response.data.token);
+    
+    // Dispatch event to notify Navbar about login
+    window.dispatchEvent(new CustomEvent('userLoggedIn', {
+      detail: {
+        user: response.data.user,
+        token: response.data.token
+      }
+    }));
+    
+    toast.success("Email verified successfully!");
+    navigate("/dashboard");
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Verification failed");
+  } finally {
+    setLoading(false);
+  }
+};
   const resendOtp = async () => {
     try {
-      await axios.post("/api/auth/resend-otp", { email });
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/resend-otp`, { email });
       toast.success("OTP resent successfully!");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to resend OTP");

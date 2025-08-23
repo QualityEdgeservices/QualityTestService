@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useEffect } from "react";
 import { Link, Outlet, useLocation, useOutletContext } from "react-router-dom";
 import {
   User,
@@ -19,6 +19,8 @@ import {
 import { motion } from "framer-motion";
 
 const UserDashboard = () => {
+  // print localstorage
+  // console.log(localStorage.getItem("token"));
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -33,6 +35,8 @@ const UserDashboard = () => {
     avgScore: 78,
     lastTest: "SSC CGL Mock Test 5",
   };
+
+
 
   // Navigation items
   const navItems = [

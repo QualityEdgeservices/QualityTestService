@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { BookOpen, Home, Info, Contact, BarChart2, Star, User, X, Menu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Home, Info, Contact, BarChart2, Star, User, X, Menu, LogOut, LayoutDashboard } from 'lucide-react';
 import { motion } from 'framer-motion';
 import logo from '../assets/logo.png'; 
-import { Link , useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-    const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const navLinks = [
     { name: "Home", href: "/", icon: <Home className="h-4 w-4" /> },
@@ -16,10 +19,76 @@ const Navbar = () => {
     { name: "Testimonials", href: "#testimonials", icon: <Star className="h-4 w-4" /> },
     { name: "Contact", href: "#contact", icon: <Contact className="h-4 w-4" /> }
   ];
-  const handleAuthClick = () => {
-    navigate('/login'); // Redirect to login page
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  console.log(user)
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setUser(response.data.user);
+        setUser(localStorage.getItem("token"));
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      localStorage.removeItem('token');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleAuthClick = () => {
+    navigate('/login');
+  };
+
+  const handleDashboardClick = () => {
+    navigate('/dashboard');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    setIsOpen(false);
+    navigate('/');
+  };
+
+  // Listen for login events from other components
+  useEffect(() => {
+    const handleLogin = (event) => {
+      if (event.detail && event.detail.user && event.detail.token) {
+        setUser(event.detail.user);
+        localStorage.setItem('token', event.detail.token);
+      }
+    };
+
+    window.addEventListener('userLoggedIn', handleLogin);
+    return () => window.removeEventListener('userLoggedIn', handleLogin);
+  }, []);
+
+  if (loading) {
+    return (
+      <nav className="bg-white shadow-md sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <img src={logo} alt="" className='w-12 h-12' />
+            <span className="md:text-xl text-lg font-bold text-primary-800">Quality Edge Services</span>
+          </div>
+          <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -47,16 +116,47 @@ const Navbar = () => {
             ))}
           </div>
           
-          {/* Login Button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="ml-6 flex items-center space-x-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
-            onClick={handleAuthClick}
-          >
-            <User className="h-4 w-4" />
-            <span>Login</span>
-          </motion.button>
+          {/* Auth Buttons */}
+          {user ? (
+            <div className="flex items-center space-x-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center space-x-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
+                onClick={handleDashboardClick}
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                <span>Dashboard</span>
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center space-x-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
+              </motion.button>
+              
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <span className="text-sm text-gray-700">{user.name}</span>
+              </div>
+            </div>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="ml-6 flex items-center space-x-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
+              onClick={handleAuthClick}
+            >
+              <User className="h-4 w-4" />
+              <span>Login</span>
+            </motion.button>
+          )}
         </div>
         
         {/* Mobile Menu Button */}
@@ -92,11 +192,49 @@ const Navbar = () => {
               </a>
             ))}
             
-            <button className="flex items-center justify-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg mt-2 transition-colors w-max"
-              onClick={handleAuthClick}>
-              <User className="h-4 w-4" />
-              <span>Login</span>
-            </button>
+            {user ? (
+              <div className="space-y-3 border-t pt-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <span className="text-gray-700">{user.name}</span>
+                </div>
+                
+                <button 
+                  className="flex items-center space-x-2 w-full bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  onClick={() => {
+                    handleDashboardClick();
+                    setIsOpen(false);
+                  }}
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span>Dashboard</span>
+                </button>
+                
+                <button 
+                  className="flex items-center space-x-2 w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  onClick={() => {
+                    handleLogout();
+                    setIsOpen(false);
+                  }}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <button 
+                className="flex items-center justify-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
+                onClick={() => {
+                  handleAuthClick();
+                  setIsOpen(false);
+                }}
+              >
+                <User className="h-4 w-4" />
+                <span>Login</span>
+              </button>
+            )}
           </div>
         </motion.div>
       )}
