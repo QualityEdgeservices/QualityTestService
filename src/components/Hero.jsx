@@ -1,8 +1,21 @@
-import React from 'react';
-import { Target, Users, TrendingUp, Clock, ChevronRight, Star, BookOpen, Award, Brain, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { Target, Users, TrendingUp, Clock, ChevronRight, Star, BookOpen, Award, Brain, Zap, MessageCircle, X, Send, Minimize } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+  const navigate = useNavigate();
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      text: "Hi there! 👋 I'm your exam preparation assistant. How can I help you today?",
+      sender: 'bot'
+    }
+  ]);
+  const chatContainerRef = useRef(null);
+
   // Stats data
   const stats = [
     {
@@ -13,7 +26,7 @@ const Hero = () => {
     },
     {
       icon: <Users className="h-6 w-6 text-indigo-400" />,
-      value: "250K+",
+      value: "15+",
       label: "Active Users",
       description: "Join our growing community of learners"
     },
@@ -37,6 +50,53 @@ const Hero = () => {
     { icon: <BookOpen className="h-5 w-5" />, text: "10,000+ Questions" },
     { icon: <Award className="h-5 w-5" />, text: "Expert Curated" },
     { icon: <Zap className="h-5 w-5" />, text: "Adaptive Testing" }
+  ];
+
+  // Auto-scroll to bottom when new messages are added
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Handle sending a message
+  const handleSendMessage = () => {
+    if (message.trim() === '') return;
+    
+    // Add user message
+    const userMessage = {
+      id: messages.length + 1,
+      text: message,
+      sender: 'user'
+    };
+    
+    setMessages([...messages, userMessage]);
+    setMessage('');
+    
+    // Simulate bot response after a short delay
+    setTimeout(() => {
+      const botResponse = {
+        id: messages.length + 2,
+        text: "I'm here to help with your exam preparation questions. You can ask me about study tips, exam patterns, or how to use our platform effectively!",
+        sender: 'bot'
+      };
+      setMessages(prev => [...prev, botResponse]);
+    }, 1000);
+  };
+
+  // Handle key press for message input
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
+  };
+
+  // Quick replies for mobile users
+  const quickReplies = [
+    "How to get started?",
+    "Exam preparation tips",
+    "Subscription plans",
+    "Contact support"
   ];
 
   return (
@@ -172,6 +232,9 @@ const Hero = () => {
                 }}
                 whileTap={{ scale: 0.98 }}
                 className="relative overflow-hidden group px-8 py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-xl font-medium text-white shadow-2xl hover:shadow-3xl transition-all duration-300"
+                onClick={() => {
+                  navigate('/login');
+                }}
               >
                 <span className="relative z-10 flex items-center justify-center">
                   Get Started Free
@@ -179,20 +242,7 @@ const Hero = () => {
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-700 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.button>
-
-              <motion.button
-                whileHover={{ 
-                  scale: 1.05,
-                  boxShadow: '0 10px 25px rgba(165, 180, 252, 0.3)'
-                }}
-                whileTap={{ scale: 0.98 }}
-                className="px-8 py-4 border-2 border-gray-600 hover:border-indigo-400 rounded-xl font-medium text-white hover:text-indigo-300 transition-all duration-300 hover:shadow-lg bg-gray-800/40 backdrop-blur-sm"
-              >
-                View Demo
-              </motion.button>
             </motion.div>
-
-           
           </motion.div>
 
           {/* Right Content - Stats */}
@@ -267,33 +317,149 @@ const Hero = () => {
         </motion.div>
       </div>
 
-      {/* Animated scroll indicator */}
-     <motion.div
-  initial={{ opacity: 0 }}
-  whileInView={{ opacity: 1 }}
-  transition={{ delay: 1.4 }}
-  viewport={{ once: true }}
-  className="absolute bottom-12 left-0 right-0 flex justify-center z-30"
->
-  {/* <motion.div
-    animate={{ y: [0, 12, 0] }}
-    transition={{ duration: 2, repeat: Infinity }}
-    className="flex flex-col items-center text-gray-400 cursor-pointer group"
-    whileHover={{ scale: 1.1 }}
-  >
-    <span className="text-sm mb-2 group-hover:text-indigo-300 transition-colors">
-      Discover Features
-    </span>
-    <div className="w-10 h-16 border-2 border-gray-600 rounded-full flex justify-center p-1 group-hover:border-indigo-500 transition-colors">
-      <motion.div
-        animate={{ y: [0, 16, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="w-3 h-3 bg-gray-500 rounded-full group-hover:bg-indigo-500 transition-colors"
-      />
-    </div>
-  </motion.div> */}
-</motion.div>
+      {/* Responsive Chatbot */}
+      <div className="fixed z-50 
+        bottom-4 right-4 
+        sm:bottom-6 sm:right-6 
+        lg:bottom-8 lg:right-8">
+        <AnimatePresence>
+          {isChatOpen ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200
+                w-[90vw] h-[70vh] max-w-md max-h-96
+                sm:w-80 sm:h-96
+                md:w-96"
+            >
+              {/* Chat header */}
+              <div className="bg-indigo-600 text-white p-3 sm:p-4 flex justify-between items-center">
+                <div className="flex items-center">
+                  <MessageCircle className="h-5 w-5 mr-2" />
+                  <span className="font-medium text-sm sm:text-base">Exam Assistant</span>
+                </div>
+                <button 
+                  onClick={() => setIsChatOpen(false)}
+                  className="text-white hover:text-indigo-200 transition-colors p-1"
+                >
+                  <Minimize className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+              </div>
+              
+              {/* Chat messages */}
+              <div 
+                ref={chatContainerRef}
+                className="flex-1 p-3 sm:p-4 overflow-y-auto bg-gray-50"
+              >
+                <div className="space-y-3">
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-xs p-3 rounded-lg text-sm sm:text-base ${
+                          msg.sender === 'user'
+                            ? 'bg-indigo-600 text-white rounded-br-none'
+                            : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Quick replies for mobile */}
+              <div className="px-3 pt-2 bg-gray-100 border-t border-gray-200 hidden sm:block">
+                <div className="flex flex-wrap gap-2">
+                  {quickReplies.map((reply, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setMessage(reply)}
+                      className="text-xs bg-white border border-gray-300 rounded-full px-3 py-1 hover:bg-gray-50 transition-colors"
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Chat input */}
+              <div className="p-2 sm:p-3 border-t border-gray-200 bg-white">
+                <div className="flex items-center">
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Type your message..."
+                    className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={message.trim() === ''}
+                    className="bg-indigo-600 text-white p-2 rounded-r-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsChatOpen(true)}
+              className="bg-indigo-600 text-white p-3 rounded-full shadow-lg hover:bg-indigo-700 transition-colors flex items-center justify-center
+                h-12 w-12
+                sm:h-14 sm:w-14"
+              aria-label="Open chat"
+            >
+              <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+              <motion.div
+                className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
 
+      {/* Mobile quick replies when chat is closed */}
+      <AnimatePresence>
+        {!isChatOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed bottom-20 right-4 z-40 sm:hidden"
+          >
+            <div className="bg-white rounded-lg shadow-lg p-3 max-w-xs">
+              <p className="text-xs text-gray-600 mb-2">Quick questions:</p>
+              <div className="flex flex-wrap gap-1">
+                {quickReplies.slice(0, 2).map((reply, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setMessage(reply);
+                      setIsChatOpen(true);
+                    }}
+                    className="text-xs bg-indigo-100 text-indigo-700 rounded-full px-2 py-1 hover:bg-indigo-200 transition-colors"
+                  >
+                    {reply}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
