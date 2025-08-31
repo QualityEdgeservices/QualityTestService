@@ -1,115 +1,39 @@
-import React from 'react';
+// src/pages/TestResultsPage.jsx
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { BarChart, PieChart, Pie, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ResponsiveContainer } from 'recharts';
 import { Award, Clock, Check, X, BookOpen, AlertCircle, TrendingUp, TrendingDown, Zap, Shield, Bookmark, RotateCw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { testAPI } from '../services/api';
 
 const TestResultsPage = () => {
   const { examId, testId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { score, total, responses } = location.state || {
-    score: 15,
-    total: 25,
-    responses: Array(25).fill().map((_, i) => ({
-      id: i + 1,
-      answered: Math.floor(Math.random() * 4),
-      correctAnswer: Math.floor(Math.random() * 4),
-      marked: Math.random() > 0.7,
-      subject: ['Quant', 'English', 'Reasoning', 'GK'][Math.floor(Math.random() * 4)],
-      difficulty: ['Easy', 'Medium', 'Hard'][Math.floor(Math.random() * 3)]
-    }))
-  };
+  const { attemptId } = location.state || {};
+  
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Calculate percentages and other metrics
-  const percentage = Math.round((score / total) * 100);
-  const incorrect = total - score;
-  const accuracy = Math.round((score / (score + incorrect)) * 100) || 0;
-  const timeSpent = Math.floor(Math.random() * 60) + 60; // Random time between 60-120 mins
-
-  // Subject-wise performance data
-  const subjects = ['Quant', 'English', 'Reasoning', 'GK'];
-  const subjectData = subjects.map(subject => {
-    const subjectQuestions = responses.filter(q => q.subject === subject);
-    const correct = subjectQuestions.filter(q => q.answered === q.correctAnswer).length;
-    return {
-      subject,
-      correct,
-      total: subjectQuestions.length,
-      percentage: Math.round((correct / subjectQuestions.length) * 100) || 0
-    };
-  });
-
-  // Difficulty-wise performance data
-  const difficulties = ['Easy', 'Medium', 'Hard'];
-  const difficultyData = difficulties.map(diff => {
-    const diffQuestions = responses.filter(q => q.difficulty === diff);
-    const correct = diffQuestions.filter(q => q.answered === q.correctAnswer).length;
-    return {
-      difficulty: diff,
-      correct,
-      total: diffQuestions.length,
-      percentage: Math.round((correct / diffQuestions.length) * 100) || 0
-    };
-  });
-
-  // Chart data
-  const subjectChartData = subjectData.map(item => ({
-    name: item.subject,
-    Correct: item.correct,
-    Incorrect: item.total - item.correct
-  }));
-
-  const difficultyChartData = difficultyData.map(item => ({
-    name: item.difficulty,
-    Correct: item.correct,
-    Incorrect: item.total - item.correct
-  }));
-
-  const timeDistributionData = [
-    { name: 'Quant', value: 35 },
-    { name: 'English', value: 25 },
-    { name: 'Reasoning', value: 20 },
-    { name: 'GK', value: 20 }
-  ];
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-  // AI Analysis Insights
-  const aiInsights = [
-    {
-      icon: <TrendingUp className="text-green-500" />,
-      title: "Strong Area",
-      content: "Your performance in Quantitative Aptitude is excellent (85% accuracy). Keep practicing to maintain this strength."
-    },
-    {
-      icon: <TrendingDown className="text-red-500" />,
-      title: "Weak Area",
-      content: "General Knowledge needs improvement (45% accuracy). Focus on current affairs and static GK."
-    },
-    {
-      icon: <Zap className="text-yellow-500" />,
-      title: "Time Management",
-      content: "You spent 40% of your time on Reasoning. Consider balancing time across all sections."
-    },
-    {
-      icon: <Shield className="text-blue-500" />,
-      title: "Test Strategy",
-      content: "You attempted 92% of questions. Good attempt rate but accuracy could improve with more careful reading."
+  useEffect(() => {
+    if (attemptId) {
+      fetchTestResults();
     }
-  ];
+  }, [attemptId]);
 
-  // Question Review Data
-  const questionReviewData = responses
-    .filter(q => q.answered !== q.correctAnswer)
-    .slice(0, 3)
-    .map(q => ({
-      id: q.id,
-      question: `Question about ${q.subject} (${q.difficulty})`,
-      yourAnswer: ['A', 'B', 'C', 'D'][q.answered],
-      correctAnswer: ['A', 'B', 'C', 'D'][q.correctAnswer],
-      explanation: "This question tested your understanding of basic concepts. The correct approach was to..."
-    }));
+  const fetchTestResults = async () => {
+    try {
+      setLoading(true);
+      const response = await testAPI.getTestResults(attemptId);
+      setResults(response.data);
+    } catch (error) {
+      setError('Failed to load test results');
+      console.error('Error fetching test results:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRetakeTest = () => {
     navigate(`/exam-details/${examId}`);
@@ -118,6 +42,59 @@ const TestResultsPage = () => {
   const handleNewTest = () => {
     navigate(`/exam-test-series`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  if (error || !results) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Results not found</h2>
+          <p className="text-gray-600">{error || 'Unable to load test results.'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { testAttempt, detailedResults, subjectPerformance, difficultyPerformance, timeDistribution, aiInsights } = results;
+
+  // Calculate percentages and other metrics
+  const percentage = Math.round(testAttempt.score);
+  const total = testAttempt.totalQuestions;
+  const score = testAttempt.correctAnswers;
+  const incorrect = total - score;
+  const accuracy = Math.round(testAttempt.accuracy);
+  const timeSpent = testAttempt.timeSpent;
+
+  // Convert icon strings to actual components
+  const iconMap = {
+    '📈': <TrendingUp className="text-green-500" />,
+    '📉': <TrendingDown className="text-red-500" />,
+    '⚡': <Zap className="text-yellow-500" />,
+    '🛡️': <Shield className="text-blue-500" />
+  };
+
+  // Chart data
+  const subjectChartData = subjectPerformance.map(item => ({
+    name: item.subject,
+    Correct: item.correct,
+    Incorrect: item.total - item.correct
+  }));
+
+  const difficultyChartData = difficultyPerformance.map(item => ({
+    name: item.difficulty,
+    Correct: item.correct,
+    Incorrect: item.total - item.correct
+  }));
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -204,10 +181,10 @@ const TestResultsPage = () => {
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Time Spent</h3>
             <p className="text-3xl font-bold text-gray-800 mb-2">
-              {Math.floor(timeSpent / 60)}h {timeSpent % 60}m
+              {Math.floor(timeSpent / 60)}m {timeSpent % 60}s
             </p>
             <p className="text-gray-600 text-center">
-              {Math.round((timeSpent / total) * 100) / 100} min per question
+              {Math.round((timeSpent / total) * 100) / 100} sec per question
             </p>
           </motion.div>
         </motion.div>
@@ -231,7 +208,7 @@ const TestResultsPage = () => {
               </ResponsiveContainer>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-              {subjectData.map((subject, index) => (
+              {subjectPerformance.map((subject, index) => (
                 <div key={index} className="bg-gray-50 p-3 rounded-lg">
                   <h3 className="font-medium text-gray-800">{subject.subject}</h3>
                   <p className="text-2xl font-bold">{subject.percentage}%</p>
@@ -250,7 +227,7 @@ const TestResultsPage = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={timeDistributionData}
+                    data={timeDistribution}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -259,7 +236,7 @@ const TestResultsPage = () => {
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   >
-                    {timeDistributionData.map((entry, index) => (
+                    {timeDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -268,7 +245,7 @@ const TestResultsPage = () => {
               </ResponsiveContainer>
             </div>
             <div className="space-y-2">
-              {timeDistributionData.map((item, index) => (
+              {timeDistribution.map((item, index) => (
                 <div key={index} className="flex items-center">
                   <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: COLORS[index] }}></div>
                   <span className="text-sm text-gray-700">{item.name}: {item.value}%</span>
@@ -295,7 +272,7 @@ const TestResultsPage = () => {
             </ResponsiveContainer>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            {difficultyData.map((diff, index) => (
+            {difficultyPerformance.map((diff, index) => (
               <div key={index} className="bg-gray-50 p-3 rounded-lg">
                 <h3 className="font-medium text-gray-800">{diff.difficulty} Questions</h3>
                 <p className="text-2xl font-bold">{diff.percentage}%</p>
@@ -319,7 +296,7 @@ const TestResultsPage = () => {
               >
                 <div className="flex items-start">
                   <div className="p-2 rounded-lg mr-3">
-                    {insight.icon}
+                    {iconMap[insight.icon] || <AlertCircle className="text-gray-500" />}
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-800">{insight.title}</h3>
@@ -332,35 +309,46 @@ const TestResultsPage = () => {
         </div>
 
         {/* Question Review */}
-        {/* <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Questions to Review</h2>
           <div className="space-y-4">
-            {questionReviewData.map((question, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium text-gray-800">{question.question}</h3>
-                  <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
-                    Incorrect
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <p className="text-sm text-gray-500">Your Answer</p>
-                    <p className="font-medium text-red-600">{question.yourAnswer}</p>
+            {detailedResults
+              .filter(q => !q.isCorrect)
+              .slice(0, 3)
+              .map((question, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-medium text-gray-800">
+                      {question.question} ({question.subject} - {question.difficulty})
+                    </h3>
+                    <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
+                      Incorrect
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Correct Answer</p>
-                    <p className="font-medium text-green-600">{question.correctAnswer}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Your Answer</p>
+                      <p className="font-medium text-red-600">
+                        {question.selectedOption !== null 
+                          ? question.options[question.selectedOption] 
+                          : 'Not attempted'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Correct Answer</p>
+                      <p className="font-medium text-green-600">
+                        {question.options[question.correctAnswer]}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm font-medium text-blue-800 mb-1">Explanation:</p>
+                    <p className="text-sm text-blue-700">{question.explanation}</p>
                   </div>
                 </div>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800 mb-1">Explanation:</p>
-                  <p className="text-sm text-blue-700">{question.explanation}</p>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
-        </div> */}
+        </div>
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row justify-center gap-4">

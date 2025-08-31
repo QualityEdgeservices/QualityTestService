@@ -44,7 +44,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post("/api/auth/reset-password", { email, otp, newPassword });
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/reset-password`, { email, otp, newPassword });
       toast.success("Password reset successfully!");
       navigate("/login");
     } catch (error) {
