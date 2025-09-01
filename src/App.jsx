@@ -21,6 +21,7 @@ import UserDashboard, {
   HelpCenter,
   Settings
 }  from './pages/UserDashboard'
+import { ChatProvider } from './contexts/ChatContext.jsx';
 function AppContent() {
   const location = useLocation();
 
@@ -59,9 +60,11 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <ChatProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </ChatProvider>
   );
 }
 
