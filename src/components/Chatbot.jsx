@@ -23,7 +23,7 @@ const Chatbot = () => {
     if (isOpen) {
       initializeChat();
     }
-  }, [isOpen, initializeChat]);
+  }, []);
 
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {

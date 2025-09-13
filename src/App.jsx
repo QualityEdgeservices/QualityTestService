@@ -16,7 +16,6 @@ import UserDashboard, {
   TestHistory,
   Performance,
   SavedTests,
-  UpcomingTests,
   Achievements,
   HelpCenter,
   Settings
@@ -25,7 +24,9 @@ import { ChatProvider } from './contexts/ChatContext.jsx';
 function AppContent() {
   const location = useLocation();
 
-  const hideNavbarFooter = location.pathname.startsWith('/dashboard');
+const hideNavbarFooter =
+  location.pathname.startsWith("/dashboard") ||
+  location.pathname.startsWith("/mock-test");
 
   return (
     <>
@@ -47,7 +48,6 @@ function AppContent() {
           <Route path="history" element={<TestHistory />} />
           <Route path="performance" element={<Performance />} />
           <Route path="saved" element={<SavedTests />} />
-          <Route path="upcoming" element={<UpcomingTests />} />
           <Route path="achievements" element={<Achievements />} />
           <Route path="help" element={<HelpCenter />} />
           <Route path="settings" element={<Settings />} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { BookText, Clock, Hash, Layers, ArrowRight, FileText, Award, Shield, Banknote, ChevronLeft, ChevronRight, BookOpen, List, Grid, Trophy, BarChart2 } from 'lucide-react';
+import { BookText, Clock, Hash, ArrowRight, FileText, Award, Shield, Banknote, ChevronLeft, Trophy, BarChart2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { examAPI, testAPI } from '../services/api';
 import { AlertCircle } from 'lucide-react';
@@ -9,7 +9,7 @@ const TestSeriesDetailPage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
   
-  const [exam, setExam] = useState(null);
+  const [examData, setExamData] = useState(null);
   const [activeCategory, setActiveCategory] = useState("All Tests");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,8 +22,8 @@ const TestSeriesDetailPage = () => {
     try {
       setLoading(true);
       const response = await examAPI.getExamDetail(examId);
-      setExam(response.data);
-      console.log(response.data)
+      console.log('Fetched exam details:', response.data);
+      setExamData(response.data);
     } catch (error) {
       setError('Failed to load exam details');
       console.error('Error fetching exam details:', error);
@@ -55,7 +55,7 @@ const TestSeriesDetailPage = () => {
     );
   }
 
-  if (!exam) {
+  if (!examData || !examData.exam) {
     return (
       <section className="py-12 md:py-16 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto px-4 sm:px-6">
@@ -71,6 +71,8 @@ const TestSeriesDetailPage = () => {
       </section>
     );
   }
+
+  const { exam, tests, testcounts, totalTests, summary } = examData;
 
   const getExamIcon = () => {
     switch (exam.name) {
@@ -100,25 +102,19 @@ const TestSeriesDetailPage = () => {
     }
   };
 
-  // Format duration from seconds to a readable format
-  const formatDuration = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    
-    if (hours > 0) {
-      return `${hours} hr ${minutes > 0 ? `${minutes} min` : ''}`;
-    }
-    return `${minutes} minutes`;
-  };
-
   // Get tests based on active category
   const getTestsForCategory = () => {
     if (activeCategory === "All Tests") {
-      return exam.tests || [];
+      return tests || [];
     }
     
-    // For other categories, filter tests by category
-    return (exam.tests || []).filter(test => 
+    // Check if we have breakdown data for the category
+    if (examData.breakdown && examData.breakdown[activeCategory.toLowerCase().replace(' ', '')]) {
+      return examData.breakdown[activeCategory.toLowerCase().replace(' ', '')];
+    }
+    
+    // Fallback to filtering tests by category field
+    return (tests || []).filter(test => 
       test.category && test.category === activeCategory
     );
   };
@@ -127,23 +123,36 @@ const TestSeriesDetailPage = () => {
   const getCategoryTabs = () => {
     const categories = ["All Tests"];
     
-    // Add categories from testCounts if available
-    if (exam.testCounts) {
-      Object.keys(exam.testCounts).forEach(category => {
-        if (exam.testCounts[category] > 0) {
+    // Add categories from testcounts if available
+    if (testcounts) {
+      Object.keys(testcounts).forEach(category => {
+        if (testcounts[category] > 0 && !categories.includes(category)) {
           categories.push(category);
         }
       });
     }
     
     // Also add any unique categories from tests
-    exam.tests?.forEach(test => {
-      if (test.category && !categories.includes(test.category)) {
-        categories.push(test.category);
-      }
-    });
+    if (tests) {
+      tests.forEach(test => {
+        if (test.category && !categories.includes(test.category)) {
+          categories.push(test.category);
+        }
+      });
+    }
     
     return categories;
+  };
+
+  // Get test count for a category
+  const getTestCount = (category) => {
+    if (category === "All Tests") return totalTests || (tests ? tests.length : 0);
+    
+    if (testcounts && testcounts[category] !== undefined) {
+      return testcounts[category];
+    }
+    
+    return 0;
   };
 
   return (
@@ -175,7 +184,7 @@ const TestSeriesDetailPage = () => {
           viewport={{ once: true }}
         >
           <div className="flex items-center mb-4 md:mb-0">
-            <div className={`bg-${exam.color || 'primary'}-50 w-14 h-14 rounded-xl flex items-center justify-center mr-4`}>
+            <div className="bg-primary-50 w-14 h-14 rounded-xl flex items-center justify-center mr-4">
               {getExamIcon()}
             </div>
             <div>
@@ -191,7 +200,7 @@ const TestSeriesDetailPage = () => {
 
         {/* Exam Stats */}
         <motion.div 
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"
+          className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.5, staggerChildren: 0.1 }}
@@ -202,12 +211,12 @@ const TestSeriesDetailPage = () => {
             whileHover={{ y: -5 }}
           >
             <div className="flex items-center">
-              <div className={`bg-${exam.color || 'primary'}-50 p-2 rounded-lg mr-3`}>
-                <Hash className={`text-${exam.color || 'primary'}-600`} size={20} />
+              <div className="bg-primary-50 p-2 rounded-lg mr-3">
+                <Hash className="text-primary-600" size={20} />
               </div>
               <div>
                 <div className="text-sm text-gray-500">Total Tests</div>
-                <div className="text-xl font-semibold text-gray-800">{exam.totalTests}</div>
+                <div className="text-xl font-semibold text-gray-800">{totalTests || (tests ? tests.length : 0)}</div>
               </div>
             </div>
           </motion.div>
@@ -217,47 +226,49 @@ const TestSeriesDetailPage = () => {
             whileHover={{ y: -5 }}
           >
             <div className="flex items-center">
-              <div className={`bg-${exam.color || 'primary'}-50 p-2 rounded-lg mr-3`}>
-                <Clock className={`text-${exam.color || 'primary'}-600`} size={20} />
+              <div className="bg-primary-50 p-2 rounded-lg mr-3">
+                <Clock className="text-primary-600" size={20} />
               </div>
               <div>
                 <div className="text-sm text-gray-500">Test Duration</div>
-                <div className="text-xl font-semibold text-gray-800">{exam.duration}</div>
+                <div className="text-xl font-semibold text-gray-800">{exam.duration || 'Varies'}</div>
               </div>
             </div>
           </motion.div>
           
-          <motion.div 
+          {/* <motion.div 
             className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
             whileHover={{ y: -5 }}
           >
             <div className="flex items-center">
-              <div className={`bg-${exam.color || 'primary'}-50 p-2 rounded-lg mr-3`}>
-                <Trophy className={`text-${exam.color || 'primary'}-600`} size={20} />
+              <div className="bg-primary-50 p-2 rounded-lg mr-3">
+                <Trophy className="text-primary-600" size={20} />
               </div>
               <div>
                 <div className="text-sm text-gray-500">Last Updated</div>
                 <div className="text-xl font-semibold text-gray-800">
-                  {new Date(exam.lastUpdated).toLocaleDateString('en-IN', {
+                  {exam.lastUpdated ? new Date(exam.lastUpdated).toLocaleDateString('en-IN', {
                     year: 'numeric',
                     month: 'long'
-                  })}
+                  }) : 'Recently'}
                 </div>
               </div>
             </div>
-          </motion.div>
+          </motion.div> */}
           
           <motion.div 
             className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
             whileHover={{ y: -5 }}
           >
             <div className="flex items-center">
-              <div className={`bg-${exam.color || 'primary'}-50 p-2 rounded-lg mr-3`}>
-                <BarChart2 className={`text-${exam.color || 'primary'}-600`} size={20} />
+              <div className="bg-primary-50 p-2 rounded-lg mr-3">
+                <BarChart2 className="text-primary-600" size={20} />
               </div>
               <div>
-                <div className="text-sm text-gray-500">Performance</div>
-                <div className="text-xl font-semibold text-gray-800">Advanced</div>
+                <div className="text-sm text-gray-500">Free Tests</div>
+                <div className="text-xl font-semibold text-gray-800">
+                  {summary && summary.freeTests ? summary.freeTests : (tests ? tests.filter(t => t.isFree).length : 0)}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -285,8 +296,8 @@ const TestSeriesDetailPage = () => {
                     transition={{ delay: index * 0.1 }}
                     viewport={{ once: true }}
                   >
-                    <div className={`bg-${exam.color || 'primary'}-50 p-1 rounded-full mr-3 mt-0.5`}>
-                      <div className={`bg-${exam.color || 'primary'}-600 w-2 h-2 rounded-full`}></div>
+                    <div className="bg-primary-50 p-1 rounded-full mr-3 mt-0.5">
+                      <div className="bg-primary-600 w-2 h-2 rounded-full"></div>
                     </div>
                     <span className="text-gray-700">{feature}</span>
                   </motion.li>
@@ -320,11 +331,11 @@ const TestSeriesDetailPage = () => {
                   onClick={() => setActiveCategory(category)}
                   className={`px-4 py-2 mr-2 rounded-lg whitespace-nowrap ${
                     activeCategory === category
-                      ? `bg-${exam.color || 'primary'}-600 text-white`
+                      ? 'bg-primary-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  {category}
+                  {category} ({getTestCount(category)})
                 </button>
               ))}
             </div>
@@ -332,50 +343,56 @@ const TestSeriesDetailPage = () => {
             {/* Tests List */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               {getTestsForCategory().length > 0 ? (
-                getTestsForCategory().map((test, index) => (
-                  <motion.div
-                    key={test._id}
-                    className={`border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors ${
-                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                    }`}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    viewport={{ once: true }}
-                  >
-                    <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                      <div className="mb-3 sm:mb-0">
-                        <h3 className="text-lg font-medium text-gray-800">{test.title || test.name}</h3>
-                        <div className="flex items-center mt-1 text-sm text-gray-500">
-                          <span className="flex items-center mr-4">
-                            <Hash className="h-4 w-4 mr-1" />
-                            {test.questions?.length || test.questions || 0} Questions
-                          </span>
-                          <span className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {test.duration ? formatDuration(test.duration) : 'N/A'}
-                          </span>
+                getTestsForCategory().map((test, index) => {
+                  const testName = test.title || test.name;
+                  const questionCount = test.questions ? test.questions.length : test.totalQuestions || 0;
+                  const isFree = test.isFree || false;
+
+                  return (
+                    <motion.div
+                      key={test._id || index}
+                      className={`border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors ${
+                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                      }`}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      viewport={{ once: true }}
+                    >
+                      <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <div className="mb-3 sm:mb-0">
+                          <h3 className="text-lg font-medium text-gray-800">{testName}</h3>
+                          <div className="flex items-center mt-1 text-sm text-gray-500">
+                            <span className="flex items-center mr-4">
+                              <Hash className="h-4 w-4 mr-1" />
+                              {questionCount} Questions
+                            </span>
+                            <span className="flex items-center">
+                              <Clock className="h-4 w-4 mr-1" />
+                              {test.duration || 'N/A'} mins
+                            </span>
+                          </div>
                         </div>
+                        <button
+                          className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                            isFree
+                              ? 'bg-primary-600 text-white hover:bg-primary-700'
+                              : 'bg-white border border-primary-600 text-primary-600 hover:bg-primary-50'
+                          }`}
+                          onClick={() => {
+                            if (isFree) {
+                              startTest(test);
+                            } else {
+                              navigate(`/test-details/${examId}/${test._id}`);
+                            }
+                          }}
+                        >
+                          {isFree ? 'Start Test' : 'View Details'}
+                        </button>
                       </div>
-                      <button
-                        className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                          index % 3 === 0
-                            ? 'bg-primary-600 text-white hover:bg-primary-700'
-                            : 'bg-white border border-primary-600 text-primary-600 hover:bg-primary-50'
-                        }`}
-                        onClick={() => {
-                          if (index % 3 === 0) {
-                            startTest(test);
-                          } else {
-                            navigate(`/test-details/${examId}/${test._id}`);
-                          }
-                        }}
-                      >
-                        {index % 3 === 0 ? 'Start Test' : 'View Details'}
-                      </button>
-                    </div>
-                  </motion.div>
-                ))
+                    </motion.div>
+                  );
+                })
               ) : (
                 <p className="text-gray-500 italic p-4">No tests available in this category</p>
               )}
