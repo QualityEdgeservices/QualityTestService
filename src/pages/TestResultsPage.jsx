@@ -2,16 +2,32 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Clock, BookOpen, AlertCircle, TrendingUp, TrendingDown, Zap, Shield, RotateCw, Lightbulb } from 'lucide-react';
+import { Clock, 
+  BookOpen, 
+  AlertCircle, 
+  TrendingUp, 
+  TrendingDown, 
+  Zap, 
+  Shield,  
+  RotateCw, 
+  Lightbulb , 
+  BarChart3 ,
+  CheckCircle, 
+  AlertTriangle, 
+  XCircle, 
+  Calendar 
+
+ } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { testAPI } from '../services/api';
+import axios from 'axios';
 
 const TestResultsPage = () => {
   const { examId, testId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { attemptId } = location.state || {};
-  
+  const [aiInsights, setAiAnalysis] = useState({});
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -27,7 +43,10 @@ const TestResultsPage = () => {
     try {
       setLoading(true);
       const response = await testAPI.getTestResults(attemptId);
+      const aianalysis = await testAPI.getAiAnalysis(testId, response.data.testAttempt, response.data.detailedResults);
+      setAiAnalysis(aianalysis.data);
       console.log('Test results response:', response.data);
+      console.log('AI analysis response:', aianalysis.data);
       setResults(response.data);
     } catch (error) {
       setError('Failed to load test results');
@@ -68,7 +87,7 @@ const TestResultsPage = () => {
     );
   }
 
-  const { testAttempt, detailedResults, timeDistribution, aiInsights } = results;
+  const { testAttempt, detailedResults, timeDistribution, aiInsightss } = results;
 
   // Calculate percentages and other metrics
   const percentage = Math.round(testAttempt.score);
@@ -224,37 +243,131 @@ const TestResultsPage = () => {
 
         {/* Tab Content */}
         {activeTab === 'insights' && (
-          <motion.div
-            className="bg-white rounded-2xl shadow-lg p-6 mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-              <Lightbulb className="h-5 w-5 mr-2 text-yellow-500" />
-              AI-Powered Performance Insights
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {aiInsights.map((insight, index) => (
-                <motion.div
-                  key={index}
-                  className="border border-gray-200 rounded-xl p-4 hover:border-primary-300 transition-colors"
-                  whileHover={{ y: -3 }}
-                >
-                  <div className="flex items-start">
-                    <div className="p-2 rounded-lg mr-3">
-                      {iconMap[insight.icon] || <AlertCircle className="text-gray-500" />}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800">{insight.title}</h3>
-                      <p className="text-gray-600">{insight.content}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+  <motion.div
+    className="bg-white rounded-2xl shadow-lg p-6 mb-8"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+  >
+    <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+      <Lightbulb className="h-5 w-5 mr-2 text-yellow-500" />
+      AI-Powered Performance Insights
+    </h2>
+    
+    {/* Overall Feedback Section */}
+    <div className="mb-8">
+      <div className="flex items-center mb-4">
+        <div className="bg-blue-100 p-2 rounded-lg mr-3">
+          <BarChart3 className="h-5 w-5 text-blue-600" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-800">Overall Performance Summary</h3>
+      </div>
+      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+        <p className="text-gray-700">{aiInsights.overallFeedback}</p>
+      </div>
+    </div>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Strengths Section */}
+      <motion.div
+        className="border border-green-200 rounded-xl p-5 bg-green-50"
+        whileHover={{ y: -3 }}
+      >
+        <div className="flex items-center mb-4">
+          <div className="bg-green-100 p-2 rounded-lg mr-3">
+            <TrendingUp className="h-5 w-5 text-green-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800">Your Strengths</h3>
+        </div>
+        <ul className="space-y-3">
+          {aiInsights.strengths.map((strength, index) => (
+            <li key={index} className="flex items-start">
+              <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+              <span className="text-gray-700">{strength}</span>
+            </li>
+          ))}
+        </ul>
+      </motion.div>
+      
+      {/* Weaknesses Section */}
+      <motion.div
+        className="border border-red-200 rounded-xl p-5 bg-red-50"
+        whileHover={{ y: -3 }}
+      >
+        <div className="flex items-center mb-4">
+          <div className="bg-red-100 p-2 rounded-lg mr-3">
+            <AlertTriangle className="h-5 w-5 text-red-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800">Areas for Improvement</h3>
+        </div>
+        <ul className="space-y-3">
+          {aiInsights.weaknesses.map((weakness, index) => (
+            <li key={index} className="flex items-start">
+              <XCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+              <span className="text-gray-700">{weakness}</span>
+            </li>
+          ))}
+        </ul>
+      </motion.div>
+    </div>
+    
+    {/* Suggestions Section */}
+    <div className="mt-6">
+      <div className="flex items-center mb-4">
+        <div className="bg-purple-100 p-2 rounded-lg mr-3">
+          <Lightbulb className="h-5 w-5 text-purple-600" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-800">Personalized Study Recommendations</h3>
+      </div>
+      <div className="bg-purple-50 border border-purple-100 rounded-xl p-5">
+        <ul className="space-y-3">
+          {aiInsights.suggestions.map((suggestion, index) => (
+            <li key={index} className="flex items-start">
+              <div className="bg-white p-1 rounded-full mr-3 mt-0.5 flex-shrink-0">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              </div>
+              <span className="text-gray-700">{suggestion}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+    
+    {/* Action Plan */}
+    <div className="mt-8 p-5 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border border-teal-200">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <Calendar className="h-5 w-5 mr-2 text-teal-600" />
+        Recommended Action Plan
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-lg border border-teal-100">
+          <div className="text-teal-600 font-semibold mb-2">Short-term (1-2 weeks)</div>
+          <ul className="text-sm text-gray-700 space-y-1">
+            <li>• Focus on memorizing key facts</li>
+            <li>• Practice 10 reasoning questions daily</li>
+            <li>• Learn 5 new vocabulary words each day</li>
+          </ul>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-teal-100">
+          <div className="text-teal-600 font-semibold mb-2">Medium-term (3-4 weeks)</div>
+          <ul className="text-sm text-gray-700 space-y-1">
+            <li>• Take 2-3 practice tests weekly</li>
+            <li>• Review incorrect answers thoroughly</li>
+            <li>• Focus on time management skills</li>
+          </ul>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-teal-100">
+          <div className="text-teal-600 font-semibold mb-2">Long-term (1+ months)</div>
+          <ul className="text-sm text-gray-700 space-y-1">
+            <li>• Develop consistent study routine</li>
+            <li>• Track progress with performance metrics</li>
+            <li>• Focus on weakest areas identified</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+)}
 
         {activeTab === 'review' && (
           <motion.div

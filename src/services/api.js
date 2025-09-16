@@ -74,6 +74,11 @@ export const testAPI = {
   submitTest: (testId, data) => api.post(`/tests/${testId}/submit`, data),
   getTestResults: (testId) => api.get(`/tests/${testId}/results`),
   saveTestProgress: (testId, data) => api.put(`/tests/${testId}/progress`, data),
+getAiAnalysis: (testId, testAttempt, responses) =>
+  api.post(`/tests/${testId}/analysis`, {
+    testAttempt,
+    responses,
+  }),
 };
 
 // Admin API
