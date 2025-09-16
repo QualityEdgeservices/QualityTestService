@@ -43,7 +43,8 @@ const Login = () => {
     }));
     
     toast.success("Login successful!");
-    navigate("/dashboard");
+    window.location.reload();
+    navigate("/");
   } catch (error) {
     toast.error(error.response?.data?.message || "Login failed");
   } finally {
@@ -70,6 +71,7 @@ const Login = () => {
 
         localStorage.setItem("token", response.data.token);
         toast.success("Google login successful!");
+        window.location.reload();
         navigate("/");
       } catch (error) {
         toast.error(error.response?.data?.message || "Google login failed");
