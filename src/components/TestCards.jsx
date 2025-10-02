@@ -139,17 +139,7 @@ const TestCards = () => {
                   </div>
                 </div>
                 
-                {/* Button with enhanced hover effect */}
-                <motion.button 
-                  className="flex items-center font-medium text-gray-700 hover:text-primary-700 transition-colors group/btn"
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <span className="relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-px after:bg-primary-600 after:transition-all after:duration-300 group-hover/btn:after:w-full">
-                    Explore Tests
-                  </span>
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-                </motion.button>
+                
               </div>
               
               {/* Floating particles effect on hover */}

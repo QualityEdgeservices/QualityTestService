@@ -304,14 +304,7 @@ const TestSeriesDetailPage = () => {
                 ))}
               </ul>
               
-              <div className="mt-8">
-                <button className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg">
-                  Start Free Trial (3 Tests)
-                </button>
-                <button className="w-full mt-4 bg-white border border-primary-600 text-primary-600 hover:bg-primary-50 py-3 rounded-lg font-medium transition-colors">
-                  View Syllabus
-                </button>
-              </div>
+              
             </div>
           </motion.div>
 
