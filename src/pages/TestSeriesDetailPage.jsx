@@ -193,7 +193,8 @@ const TestSeriesDetailPage = () => {
             </div>
           </div>
           <button className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg flex items-center">
-            <span>Buy Now for ₹{exam.price}</span>
+            {/* <span>Buy Now for ₹{exam.price}</span> */}
+            <span>Free Now</span>
             <ArrowRight className="ml-2 h-5 w-5" />
           </button>
         </motion.div>

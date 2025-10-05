@@ -317,7 +317,8 @@ const ExamTestSeriesPage = () => {
                           {React.cloneElement(getExamIcon(exam), { className: `text-${colorClass}-600` })}
                         </div>
                         <div className="bg-gray-100 rounded-lg px-3 py-1">
-                          <span className="font-semibold text-gray-800">₹{exam.price}</span>
+                          {/* <span className="font-semibold text-gray-800">₹{exam.price}</span> */}
+                          <span className="font-semibold text-gray-800">₹ 0</span>
                         </div>
                       </div>
                       
