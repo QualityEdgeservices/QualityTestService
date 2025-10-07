@@ -50,10 +50,10 @@ const Contact = () => {
                   <Phone className="text-teal-700" size={20} />
                 </div>
                 <a
-                  href="tel:+919250242736"
+                  href="tel:+917518425535"
                   className="text-gray-600 hover:text-teal-700 transition text-sm sm:text-base"
                 >
-                  +91-9250242736
+                  +91-7518425535
                 </a>
               </div>
 
@@ -64,16 +64,10 @@ const Contact = () => {
                 </div>
                 <div className="flex flex-col space-y-1">
                   <a
-                    href="mailto:qualityedgeservice@gmail.com"
+                    href="mailto:info@qualityedges.in"
                     className="text-gray-600 hover:text-teal-700 transition text-sm sm:text-base"
                   >
-                    qualityedgeservice@gmail.com
-                  </a>
-                  <a
-                    href="mailto:info@qualityedges.com"
-                    className="text-gray-600 hover:text-teal-700 transition text-sm sm:text-base"
-                  >
-                    info@qualityedges.com
+                    info@qualityedges.in
                   </a>
                 </div>
               </div>
